@@ -24,43 +24,63 @@ ev3 = EV3Brick()
 right_motor = Motor(Port.B)
 left_motor = Motor(Port.C)
 gyro = GyroSensor(Port.S3)
-touch_sensor = TouchSensor(Port.S1)
+touch_sensor = TouchSensor(Port.S4)
 path_map = []
 time = 0
 
+# <0 - Left
+# >0 - Right
 
 def rightTurn():
     gyro.reset_angle(0)
-    right_motor.dc(-25)
-    left_motor.dc(25)
-    while gyro.angle() < 85:
+    right_motor.dc(-50)
+    left_motor.dc(50)
+    while gyro.angle() < 60:
+        wait(10)
+    right_motor.dc(-20)
+    left_motor.dc(20)
+    while gyro.angle() < 88:
         wait(10)
     right_motor.hold()
     left_motor.hold()
-    wait(250)
+    wait(500)
 
 
 def leftTurn():
     gyro.reset_angle(0)
-    right_motor.dc(25)
-    left_motor.dc(-25)
-    while gyro.angle() > -85:
+    right_motor.dc(50)
+    left_motor.dc(-50)
+    while gyro.angle() > -60:
+        wait(10)
+    right_motor.dc(20)
+    left_motor.dc(-20)
+    while gyro.angle() > -88:
         wait(10)
     right_motor.hold()
     left_motor.hold()
-    wait(250)
+    wait(500)
 
 
 def forward(desp):
+    gyro.reset_angle(0)
     left_motor.reset_angle(0)
     left_motor.reset_angle(0)
     right_motor.dc(desp)
     left_motor.dc(desp)
-    while left_motor.angle() < 885:
+    while left_motor.angle() < 865:
+        if gyro.angle() > 3:
+            right_motor.dc(desp + 10)
+            left_motor.dc(desp)
+        elif gyro.angle() < -3:
+            right_motor.dc(desp)
+            left_motor.dc(desp + 10)
+        else:
+            right_motor.dc(desp)
+            left_motor.dc(desp)
         wait(10)
     right_motor.hold()
     left_motor.hold()
-    wait(250)
+    wait(500)
 
 
 def f():
@@ -68,7 +88,7 @@ def f():
     right_motor.reset_angle(0)
     right_motor.dc(25)
     left_motor.dc(25)
-    while left_motor.angle() < 540:
+    while left_motor.angle() < 400:
         wait(10)
     right_motor.hold()
     left_motor.hold()
@@ -77,34 +97,13 @@ def f():
 
 def updateConfig():
     time = 50
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("LT")
-    path_map.append("F")
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("LT")
-    path_map.append("F")
-    path_map.append("LT")
-    path_map.append("F")
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("RT")
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("F")
-    path_map.append("RT")
-    path_map.append("F")
-    path_map.append("RT")
     path_map.append("F")
 
 
 # Write your program here.
 updateConfig()
 while not touch_sensor.pressed():
-    wait(100)
+    wait(50)
 
 forwards = 0
 time -= 2.4
@@ -130,9 +129,9 @@ elif mindif == abs(tperf - 2.1):
 
 f()
 for instruction in path_map:
-    if instruction == "RT":
+    if instruction == "R":
         rightTurn()
-    elif instruction == "LT":
+    elif instruction == "L":
         leftTurn()
     elif instruction == "F":
         forward(despw)
