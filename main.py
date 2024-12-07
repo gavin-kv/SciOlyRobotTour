@@ -23,6 +23,7 @@ ev3 = EV3Brick()
 
 right_motor = Motor(Port.B)
 left_motor = Motor(Port.C)
+ultrasonic = UltrasonicSensor(Port.S2)
 gyro = GyroSensor(Port.S3)
 touch_sensor = TouchSensor(Port.S4)
 path_map = []
@@ -30,6 +31,9 @@ time = 0
 
 # <0 - Left
 # >0 - Right
+
+# Smart Moving Forward - move (smart) until < 250 && > 100
+
 
 def rightTurn():
     gyro.reset_angle(0)
@@ -39,7 +43,22 @@ def rightTurn():
         wait(10)
     right_motor.dc(-20)
     left_motor.dc(20)
-    while gyro.angle() < 88:
+    while gyro.angle() < 80:
+        wait(10)
+    right_motor.hold()
+    left_motor.hold()
+    wait(500)
+
+
+def oneEighty():
+    gyro.reset_angle(0)
+    right_motor.dc(-50)
+    left_motor.dc(50)
+    while gyro.angle() < 150:
+        wait(10)
+    right_motor.dc(-20)
+    left_motor.dc(20)
+    while gyro.angle() < 170:
         wait(10)
     right_motor.hold()
     left_motor.hold()
@@ -54,7 +73,7 @@ def leftTurn():
         wait(10)
     right_motor.dc(20)
     left_motor.dc(-20)
-    while gyro.angle() > -88:
+    while gyro.angle() > -80:
         wait(10)
     right_motor.hold()
     left_motor.hold()
@@ -64,10 +83,25 @@ def leftTurn():
 def forward(desp):
     gyro.reset_angle(0)
     left_motor.reset_angle(0)
-    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
     right_motor.dc(desp)
     left_motor.dc(desp)
     while left_motor.angle() < 865:
+        right_motor.dc(desp)
+        left_motor.dc(desp)
+        wait(10)
+    right_motor.hold()
+    left_motor.hold()
+    wait(500)
+
+
+def wall(desp):
+    gyro.reset_angle(0)
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
+    right_motor.dc(desp)
+    left_motor.dc(desp)
+    while ultrasonic.distance() > 90:
         if gyro.angle() > 3:
             right_motor.dc(desp + 10)
             left_motor.dc(desp)
@@ -88,16 +122,44 @@ def f():
     right_motor.reset_angle(0)
     right_motor.dc(25)
     left_motor.dc(25)
-    while left_motor.angle() < 400:
+    while left_motor.angle() < 450:
         wait(10)
     right_motor.hold()
     left_motor.hold()
     wait(250)
 
 
+""" 
+R - Right turn    
+L - Left Turn   
+S - Straight (50cm)     
+F - Straight (25cm)     
+U - U-Turn
+W - Forward to the next wall
+"""
+
+
 def updateConfig():
-    time = 50
-    path_map.append("F")
+    time = 59
+    path_map.append("R")
+    path_map.append("S")
+    path_map.append("S")
+    path_map.append("L")
+    path_map.append("S")
+    path_map.append("U")
+    path_map.append("S")
+    path_map.append("L")
+    path_map.append("S")
+    path_map.append("L")
+    path_map.append("S")
+    path_map.append("S")
+    path_map.append("L")
+    path_map.append("S")
+    path_map.append("R")
+    path_map.append("S")
+    path_map.append("L")
+    path_map.append("S")
+    path_map.append("S")
 
 
 # Write your program here.
@@ -109,9 +171,13 @@ forwards = 0
 time -= 2.4
 
 for entry in path_map:
-    if entry == "RT" or entry == "LT":
+    if entry == "R" or entry == "L":
         time -= 1.1
-    elif entry == "F":
+    elif entry == "U":
+        time -= 2.2
+    elif entry == "S":
+        forwards += 1
+    elif entry == "W":
         forwards += 1
 
 tperf = time / forwards
@@ -133,5 +199,11 @@ for instruction in path_map:
         rightTurn()
     elif instruction == "L":
         leftTurn()
-    elif instruction == "F":
+    elif instruction == "S":
         forward(despw)
+    elif instruction == "F":
+        f()
+    elif instruction == "U":
+        oneEighty()
+    elif instruction == "W":
+        wall(despw)
